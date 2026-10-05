@@ -1,0 +1,27 @@
+@startuml
+skinparam dpi 220
+skinparam componentStyle rectangle
+skinparam defaultFontName Arial
+skinparam backgroundColor white
+title Alternativa A (descartada): EcoRecicla AQP con monolito en capas
+actor "Vecino / Reciclador /\nMunicipalidad" as U
+package "Monolito en capas (un solo despliegue)" {
+  [Capa de presentación\n(API REST + PWA)] as PR
+  [Capa de lógica de negocio\n(solicitudes, rutas, puntos, reportes)] as LN
+  [Capa de acceso a datos] as AD
+}
+database "PostgreSQL" as DB
+cloud "Servicio de mapas" as MAP
+U --> PR
+PR --> LN
+LN --> AD
+AD --> DB
+LN --> MAP
+note bottom of LN
+  Puntaje 3,80 frente a 4,15 del monolito modular:
+  simple y rápida de entregar, pero las reglas de puntos
+  y los distritos quedan mezclados en la misma capa.
+  Modificabilidad 2/5: no cumple QA-01 (≤ 2 días-persona
+  sin tocar otros módulos).
+end note
+@enduml
