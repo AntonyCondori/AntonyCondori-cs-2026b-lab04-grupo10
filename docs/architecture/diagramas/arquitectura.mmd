@@ -1,0 +1,26 @@
+flowchart TB
+    VE["Vecino"]
+    RE["Reciclador"]
+    MU["Municipalidad"]
+    subgraph APP["EcoRecicla AQP — Monolito modular (un solo despliegue)"]
+        API["Capa de presentación: API REST + PWA"]
+        M1["Identidad<br/>y distritos"]
+        M2["Solicitudes<br/>de recojo"]
+        M3["Rutas<br/>del día"]
+        M4["Puntos<br/>y canjes"]
+        M5["Reportes"]
+        INF["Capa de infraestructura: repositorios y adaptadores externos"]
+    end
+    DB[("PostgreSQL<br/>(un esquema por módulo)")]
+    MAP["Servicio de mapas<br/>y geocodificación"]
+    VE & RE & MU --> API
+    API --> M1 & M2 & M3 & M4 & M5
+    M1 & M2 & M3 & M4 & M5 --> INF
+    INF --> DB
+    INF --> MAP
+    classDef mod fill:#E8F5E9,stroke:#2E7D32,color:#000
+    classDef ext fill:#F2F2F2,stroke:#7F7F7F,color:#000,stroke-dasharray: 4 3
+    classDef usr fill:#FDEDEC,stroke:#C8310E,color:#000
+    class M1,M2,M3,M4,M5 mod
+    class MAP ext
+    class VE,RE,MU usr
