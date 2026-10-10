@@ -1,0 +1,100 @@
+@startuml clases-solicitudes
+title Módulo Solicitudes de recojo - HU-01
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+' ASUNCIONES CORREGIDAS:
+' - Un Vecino autenticado es el actor; su autenticación se resuelve fuera del módulo (solo se referencia su id).
+' - Un detalle de residuo se compone de tipo, descripción opcional y peso en kg.
+' - Un peso <= 0 o una lista vacía invalida la solicitud (CA3); en ese caso no se guarda.
+' - Si el servicio de mapas falla o la dirección es inválida, la solicitud se persiste como RECHAZADA con motivo (CA2).
+' - La notificación al vecino se modela como puerto (ADR-001, integración externa).
+' - Los estados incluyen todo el ciclo de vida de la Solicitud para el caso EcoRecicla AQP.
+
+enum EstadoSolicitud {
+  PENDIENTE
+  ASIGNADA
+  RECOGIDA
+  PESADA
+  PUNTOS_ACREDITADOS
+  RECHAZADA
+}
+
+class Solicitud {
+  - id: String
+  - vecinoId: String
+  - direccion: Direccion
+  - estado: EstadoSolicitud
+  - motivoRechazo: String
+  - fechaCreacion: Date
+  + crear(vecinoId: String, direccion: Direccion, detalles: DetalleResiduo[]): Solicitud {static}
+  + agregarDetalle(detalle: DetalleResiduo): void
+  + validarDetalles(): void
+  + asignarCoordenadas(coordenadas: Coordenadas): void
+  + marcarPendiente(): void
+  + rechazar(motivo: String): void
+  + obtenerPesoTotal(): Number
+}
+
+class DetalleResiduo {
+  - tipo: String
+  - descripcion: String
+  - pesoKg: Number
+  + esValido(): Boolean
+}
+
+class Direccion {
+  - texto: String
+  - coordenadas: Coordenadas
+  + estaGeocodificada(): Boolean
+}
+
+class Coordenadas {
+  - latitud: Number
+  - longitud: Number
+}
+
+class SolicitarRecojoService <<application service>> {
+  + solicitarRecojo(vecinoId: String, textoDireccion: String, detalles: DetalleResiduo[]): Solicitud
+}
+
+interface SolicitudRepository <<port>> {
+  + guardar(solicitud: Solicitud): void
+}
+
+interface MapasGeocodificacionPort <<port>> {
+  + geocodificar(direccion: String): Coordenadas
+}
+
+class GoogleMapsAdapter <<adapter>> {
+  + geocodificar(direccion: String): Coordenadas
+}
+
+interface NotificacionPort <<port>> {
+  + notificarErrorUbicacion(vecinoId: String, motivo: String): void
+}
+
+class ErrorValidacion <<exception>> {
+  + mensaje: String
+}
+
+class ErrorGeocodificacion <<exception>> {
+  + mensaje: String
+}
+
+Solicitud "1" *-- "1..*" DetalleResiduo : detalles
+Solicitud "1" *-- "1" Direccion
+Solicitud "1" --> "1" EstadoSolicitud : estado
+Direccion "1" *-- "0..1" Coordenadas
+
+SolicitarRecojoService ..> Solicitud : crea
+SolicitarRecojoService --> "1" SolicitudRepository
+SolicitarRecojoService --> "1" MapasGeocodificacionPort
+SolicitarRecojoService --> "1" NotificacionPort
+SolicitarRecojoService ..> ErrorValidacion : lanza
+
+MapasGeocodificacionPort <|.. GoogleMapsAdapter : realiza
+MapasGeocodificacionPort ..> ErrorGeocodificacion : lanza
+MapasGeocodificacionPort ..> Coordenadas : retorna
+
+@enduml
