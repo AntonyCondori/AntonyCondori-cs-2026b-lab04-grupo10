@@ -1,0 +1,69 @@
+@startuml paquetes
+title EcoRecicla AQP - Paquetes del monolito modular
+
+top to bottom direction
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam packageStyle rectangle
+
+package "EcoRecicla AQP" {
+  package "Reportes" as REP {
+    class ReportesService <<propuesto>>
+  }
+  package "Rutas" as RUT {
+    class RutasService <<propuesto>>
+  }
+  package "Solicitudes de recojo" as SOL {
+    class Solicitud
+    enum EstadoSolicitud {
+      PENDIENTE
+      ASIGNADA
+      RECOGIDA
+      PESADA
+      PUNTOS_ACREDITADOS
+      RECHAZADA
+    }
+    class SolicitarRecojoService
+    interface SolicitudRepository <<puerto>>
+    interface MapasGeocodificacionPort <<puerto>>
+    interface NotificacionPort <<puerto>>
+    class GoogleMapsAdapter <<adaptador>>
+    MapasGeocodificacionPort <|.. GoogleMapsAdapter
+  }
+  package "Puntos y canjes" as PUN {
+    class PuntosService <<propuesto>>
+  }
+  package "Identidad y distritos" as IDE {
+    class IdentidadDistritosService <<propuesto>>
+  }
+}
+
+REP ..> SOL : consulta pública de solicitudes
+REP ..> RUT : consulta pública de rutas
+REP ..> PUN : consulta pública de puntos
+
+RUT ..> SOL : consultarPendientes()\ny asignarSolicitud()
+SOL ..> IDE : validarReferencias()
+SOL ..> PUN : acreditarPuntos()
+PUN ..> IDE : consultarDistrito()
+
+note bottom of IDE
+  Regla de dependencias:
+  - Comunicación mediante interfaces públicas.
+  - Sin dependencias cíclicas.
+  - Sin consultas directas entre esquemas.
+  - Identidad y distritos no depende
+    de los demás módulos.
+
+  Los servicios marcados como propuestos
+  y las operaciones entre módulos
+  completan el diseño detallado.
+end note
+
+note right of PUN
+  Recibe identificadores, peso y distrito.
+  No importa la clase Solicitud.
+  Así se evita una dependencia de retorno.
+end note
+@enduml
+
