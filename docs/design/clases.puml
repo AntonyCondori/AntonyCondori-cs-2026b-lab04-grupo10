@@ -27,6 +27,9 @@ class Solicitud {
   - estado: EstadoSolicitud
   - motivoRechazo: String
   - fechaCreacion: Date
+  - recicladorId: String
+  - pesoRealKg: Number
+  - puntos: Integer
   + crear(vecinoId: String, direccion: Direccion, detalles: DetalleResiduo[]): Solicitud {static}
   + agregarDetalle(detalle: DetalleResiduo): void
   + validarDetalles(): void
@@ -34,6 +37,10 @@ class Solicitud {
   + marcarPendiente(): void
   + rechazar(motivo: String): void
   + obtenerPesoTotal(): Number
+  + asignar(recicladorId: String): void
+  + registrarRecojo(): void
+  + registrarPesaje(pesoKg: Number): void
+  + acreditarPuntos(puntos: Integer): void
 }
 
 class DetalleResiduo {
@@ -58,19 +65,19 @@ class SolicitarRecojoService <<application service>> {
   + solicitarRecojo(vecinoId: String, textoDireccion: String, detalles: DetalleResiduo[]): Solicitud
 }
 
-interface SolicitudRepository <<port>> {
+interface SolicitudRepository <<puerto>> {
   + guardar(solicitud: Solicitud): void
 }
 
-interface MapasGeocodificacionPort <<port>> {
+interface MapasGeocodificacionPort <<puerto>> {
   + geocodificar(direccion: String): Coordenadas
 }
 
-class GoogleMapsAdapter <<adapter>> {
+class GoogleMapsAdapter <<adaptador>> {
   + geocodificar(direccion: String): Coordenadas
 }
 
-interface NotificacionPort <<port>> {
+interface NotificacionPort <<puerto>> {
   + notificarErrorUbicacion(vecinoId: String, motivo: String): void
 }
 
@@ -88,10 +95,10 @@ Solicitud "1" --> "1" EstadoSolicitud : estado
 Direccion "1" *-- "0..1" Coordenadas
 
 SolicitarRecojoService ..> Solicitud : crea
-SolicitarRecojoService --> "1" SolicitudRepository
-SolicitarRecojoService --> "1" MapasGeocodificacionPort
-SolicitarRecojoService --> "1" NotificacionPort
-SolicitarRecojoService ..> ErrorValidacion : lanza
+SolicitarRecojoService "1" --> "1" SolicitudRepository
+SolicitarRecojoService "1" --> "1" MapasGeocodificacionPort
+SolicitarRecojoService "1" --> "1" NotificacionPort
+Solicitud ..> ErrorValidacion : lanza
 
 MapasGeocodificacionPort <|.. GoogleMapsAdapter : realiza
 MapasGeocodificacionPort ..> ErrorGeocodificacion : lanza
