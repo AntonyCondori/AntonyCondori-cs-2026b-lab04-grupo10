@@ -1,0 +1,73 @@
+@startuml classes_solicitudes
+set namespaceSeparator none
+class "Coordenadas" as solicitudes.dominio.Coordenadas {
+  latitud : float
+  longitud : float
+}
+class "DetalleResiduo" as solicitudes.dominio.DetalleResiduo {
+  descripcion : str
+  peso_kg : float
+  tipo : str
+  es_valido() -> bool
+}
+class "Direccion" as solicitudes.dominio.Direccion {
+  coordenadas : Coordenadas | None
+  texto : str
+  esta_geocodificada() -> bool
+}
+class "<color:red>ErrorGeocodificacion</color>" as solicitudes.dominio.ErrorGeocodificacion {
+  mensaje : str
+}
+class "<color:red>ErrorValidacion</color>" as solicitudes.dominio.ErrorValidacion {
+  mensaje : str
+}
+class "EstadoSolicitud" as solicitudes.dominio.EstadoSolicitud {
+  name
+}
+class "GoogleMapsAdapter" as solicitudes.dominio.GoogleMapsAdapter {
+  {abstract}geocodificar(direccion: str) -> Coordenadas
+}
+class "MapasGeocodificacionPort" as solicitudes.dominio.MapasGeocodificacionPort {
+  {abstract}geocodificar(direccion: str) -> Coordenadas
+}
+class "NotificacionPort" as solicitudes.dominio.NotificacionPort {
+  {abstract}notificar_error_ubicacion(vecino_id: str, motivo: str) -> None
+}
+class "SolicitarRecojoService" as solicitudes.dominio.SolicitarRecojoService {
+  mapas
+  notificacion
+  repositorio
+  solicitar_recojo(vecino_id: str, texto_direccion: str, detalles: list[DetalleResiduo]) -> Solicitud
+}
+class "Solicitud" as solicitudes.dominio.Solicitud {
+  detalles : list[DetalleResiduo]
+  direccion
+  estado : EstadoSolicitud | None
+  fecha_creacion : datetime
+  id : str
+  motivo_rechazo : str | None
+  peso_real_kg : float | None
+  puntos : int | None
+  reciclador_id : str | None
+  vecino_id : str
+  acreditar_puntos(puntos: int) -> None
+  agregar_detalle(detalle: DetalleResiduo) -> None
+  asignar(reciclador_id: str) -> None
+  asignar_coordenadas(coordenadas: Coordenadas) -> None
+  crear(vecino_id: str, direccion: Direccion, detalles: list[DetalleResiduo]) -> Solicitud
+  marcar_pendiente() -> None
+  obtener_peso_total() -> float
+  rechazar(motivo: str) -> None
+  registrar_pesaje(peso_kg: float) -> None
+  registrar_recojo() -> None
+  validar_detalles() -> None
+}
+class "SolicitudRepository" as solicitudes.dominio.SolicitudRepository {
+  {abstract}guardar(solicitud: Solicitud) -> None
+}
+solicitudes.dominio.GoogleMapsAdapter --|> solicitudes.dominio.MapasGeocodificacionPort
+solicitudes.dominio.Solicitud --> solicitudes.dominio.Direccion : direccion
+solicitudes.dominio.SolicitarRecojoService --> solicitudes.dominio.MapasGeocodificacionPort : mapas
+solicitudes.dominio.SolicitarRecojoService --> solicitudes.dominio.NotificacionPort : notificacion
+solicitudes.dominio.SolicitarRecojoService --> solicitudes.dominio.SolicitudRepository : repositorio
+@enduml
