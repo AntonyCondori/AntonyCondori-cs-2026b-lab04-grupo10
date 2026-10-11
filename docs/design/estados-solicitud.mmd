@@ -1,0 +1,26 @@
+stateDiagram-v2
+    direction TB
+
+    [*] --> PENDIENTE : marcarPendiente() [dirección geocodificada]
+    [*] --> RECHAZADA : rechazar(motivo) [dirección inválida o mapas sin respuesta]
+
+    PENDIENTE --> ASIGNADA : asignar(recicladorId) [reciclador disponible]
+    ASIGNADA --> RECOGIDA : registrarRecojo() [residuos entregados]
+    RECOGIDA --> PESADA : registrarPesaje(pesoKg) [pesoKg > 0]
+    PESADA --> PUNTOS_ACREDITADOS : acreditarPuntos(puntos) [acreditación confirmada]
+
+    PUNTOS_ACREDITADOS --> [*]
+    RECHAZADA --> [*]
+
+    note right of PENDIENTE
+        Los detalles ya fueron validados.
+        Sin reciclador disponible,
+        permanece PENDIENTE.
+    end note
+
+    note right of PESADA
+        Si falla la acreditación,
+        permanece PESADA
+        hasta un nuevo intento.
+    end note
+
