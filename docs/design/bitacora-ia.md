@@ -1,0 +1,5 @@
+# Bitácora de uso de IA — EcoRecicla AQP
+
+| # | Fecha | Herramienta | Prompt (resumen) | Qué propuso la IA | Qué verificamos o corregimos | Decisión |
+|---|-------|-------------|------------------|-------------------|------------------------------|----------|
+| 1 | 10/10 | Claude | Prompt IA 1: Diagrama de clases para módulo Solicitudes (HU-01) con 3 C.A. y contexto ADR-001 | Propuso diagrama con clases (`Solicitud`, `DetalleResiduo`, `Direccion`, `Coordenadas`, `SolicitarRecojoService`), enum `EstadoSolicitud` (solo 2 estados) y 3 puertos. Asumió actor externo (referenciado por ID) y usó excepciones. | Se verificó: cumple con 6+ clases y multiplicidades. Correcciones C5: la enumeración debe incluir todos los estados de la entidad (Pendiente, Asignada, Recogida, Pesada, PuntosAcreditados) y falta la clase adaptador concreta para el puerto de mapas. | Corregida (se completaron los estados en la enumeración, se añadió el adaptador `GoogleMapsAdapter` y se aceptó el uso de IDs para el vecino) |
