@@ -1,0 +1,85 @@
+@startuml actividades-ruta-diaria
+title EcoRecicla AQP - Ruta diaria del reciclador
+
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ActivityBackgroundColor #EEF2F8
+skinparam ActivityBorderColor #1A3A5C
+
+|Sistema|
+start
+:Consultar solicitudes PENDIENTES\ncon coordenadas válidas;
+
+if (¿Existen solicitudes pendientes?) then (sí)
+  :Consultar disponibilidad de recicladores;
+else (no)
+  :Registrar que no hay recojos pendientes;
+  stop
+endif
+
+if (¿Hay reciclador disponible?) then (sí)
+  :Seleccionar solicitudes;
+  :Planificar el recorrido;
+  :Asignar solicitudes al reciclador;
+  :Cambiar solicitudes a ASIGNADA;
+else (no)
+  :Mantener solicitudes PENDIENTES;
+  stop
+endif
+
+fork
+  :Publicar la ruta en la PWA\ndel reciclador;
+fork again
+  :Enviar avisos de recojo\na los vecinos;
+end fork
+
+|Reciclador|
+:Consultar la ruta diaria;
+
+while (¿Quedan solicitudes por atender?) is (sí)
+  :Ir a la siguiente dirección;
+
+  |Vecino|
+  if (¿Entrega los residuos?) then (sí)
+    :Entregar residuos reciclables;
+
+    |Reciclador|
+    :Registrar el recojo;
+
+    |Sistema|
+    :Cambiar solicitud a RECOGIDA;
+
+    |Reciclador|
+    :Pesar residuos;
+    :Registrar el peso real;
+
+    |Sistema|
+    if (¿Peso real mayor que cero?) then (sí)
+      :Cambiar solicitud a PESADA;
+      :Solicitar acreditación de puntos;
+
+      if (¿Acreditación confirmada?) then (sí)
+        :Cambiar solicitud a PUNTOS_ACREDITADOS;
+      else (no)
+        :Mantener solicitud PESADA;
+        :Registrar reintento pendiente;
+      endif
+    else (no)
+      :Mantener solicitud RECOGIDA;
+      :Registrar revisión del pesaje;
+    endif
+  else (no)
+    |Sistema|
+    :Mantener solicitud ASIGNADA;
+    :Registrar reprogramación pendiente;
+  endif
+
+  |Reciclador|
+endwhile (no)
+
+:Finalizar el recorrido;
+|Sistema|
+:Guardar resumen de la ruta;
+stop
+@enduml
+
