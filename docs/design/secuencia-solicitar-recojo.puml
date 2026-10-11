@@ -9,6 +9,7 @@ actor Vecino
 participant "PWA" as UI
 participant "SolicitudController" as C
 participant "SolicitarRecojoService" as S
+participant "Direccion" as D
 participant "Solicitud" as P
 participant "MapasGeocodificacionPort\n(GoogleMapsAdapter)" as G
 participant "SolicitudRepository" as R
@@ -18,6 +19,7 @@ Vecino -> UI : Ingresa dirección y residuos
 UI -> C : POST /solicitudes
 C -> S : solicitarRecojo(vecinoId, textoDireccion, detalles)
 
+S -> D ** : Direccion(textoDireccion)
 S -> P ** : crear(vecinoId, direccion, detalles)
 
 loop por cada detalleResiduo
@@ -25,6 +27,12 @@ loop por cada detalleResiduo
 end
 
 P -> P : validarDetalles()
+break lista vacía o peso 0 (criterio 3)
+    P --> S : ErrorValidacion
+    S --> C : ErrorValidacion
+    C --> UI : 422 Unprocessable Entity
+    UI --> Vecino : Muestra error de validación
+end
 S <-- P : solicitud (instancia)
 
 S -> G : geocodificar(textoDireccion)
