@@ -1,0 +1,57 @@
+@startuml secuencia-solicitar-recojo
+title Secuencia: Solicitar recojo de residuos (HU-01)
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam sequenceMessageAlign center
+autonumber
+
+actor Vecino
+participant "PWA" as UI
+participant "SolicitudController" as C
+participant "SolicitarRecojoService" as S
+participant "Solicitud" as P
+participant "MapasGeocodificacionPort\n(GoogleMapsAdapter)" as G
+participant "SolicitudRepository" as R
+participant "NotificacionPort" as N
+
+Vecino -> UI : Ingresa dirección y residuos
+UI -> C : POST /solicitudes
+C -> S : solicitarRecojo(vecinoId, textoDireccion, detalles)
+
+S -> P ** : crear(vecinoId, direccion, detalles)
+
+loop por cada detalleResiduo
+    P -> "detalle: DetalleResiduo" : esValido()
+end
+
+P -> P : validarDetalles()
+S <-- P : solicitud (instancia)
+
+S -> G : geocodificar(textoDireccion)
+
+alt geocodificación exitosa
+    G --> S : coordenadas
+    S -> P : asignarCoordenadas(coordenadas)
+    S -> P : marcarPendiente()
+    S -> R : guardar(solicitud)
+    S --> C : solicitud PENDIENTE
+    C --> UI : 201 Created
+    UI --> Vecino : Muestra confirmación de recojo
+    
+else dirección inválida o sin respuesta
+    G --> S : ErrorGeocodificacion
+    S -> P : rechazar("Dirección inválida")
+    S -> R : guardar(solicitud)
+    
+    note right of N
+        asíncrono
+        (no bloquea la respuesta)
+    end note
+    S ->> N : notificarErrorUbicacion(vecinoId, "Dirección inválida")
+    
+    S --> C : solicitud RECHAZADA
+    C --> UI : 400 Bad Request
+    UI --> Vecino : Muestra error de ubicación
+end
+
+@enduml
