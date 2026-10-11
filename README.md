@@ -53,3 +53,40 @@ Claude nos ayudó a estructurar los entregables, a redactar los borradores de dr
 ## Vista de despliegue (E6)
 
 [Diagrama y reproducción](docs/architecture/diagramas/README.md). Se incluye una vista alternativa PlantUML porque no se pudo instalar Graphviz; el PNG adjunto se renderizó localmente con Pillow. El script también admite Python Diagrams, pendiente de ejecución con sus dependencias instaladas.
+
+## Diseño UML (Lab 05)
+
+Diseño detallado del módulo **Solicitudes de recojo** de EcoRecicla AQP (HU-01: *Solicitar el recojo de residuos reciclables*), coherente con el ADR-001 (monolito modular, puertos y adaptadores). Diagramas escritos como código (PlantUML y Mermaid).
+
+### Máquina de estados de `Solicitud` (Mermaid)
+
+```mermaid
+stateDiagram-v2
+    direction TB
+    [*] --> PENDIENTE : marcarPendiente() [dirección geocodificada]
+    [*] --> RECHAZADA : rechazar(motivo) [dirección inválida o mapas sin respuesta]
+    PENDIENTE --> ASIGNADA : asignar(recicladorId) [reciclador disponible]
+    ASIGNADA --> RECOGIDA : registrarRecojo() [residuos entregados]
+    RECOGIDA --> PESADA : registrarPesaje(pesoKg) [pesoKg > 0]
+    PESADA --> PUNTOS_ACREDITADOS : acreditarPuntos(puntos) [acreditación confirmada]
+    PUNTOS_ACREDITADOS --> [*]
+    RECHAZADA --> [*]
+```
+
+### Entregables
+
+| Código | Entregable | Archivo | Imagen |
+|---|---|---|---|
+| E1 | Historia de usuario y diagrama de clases | [historia.md](docs/design/historia.md), [clases.puml](docs/design/clases.puml) | [E1_clases-solicitudes.png](docs/design/img/E1_clases-solicitudes.png) |
+| E2 | Diagrama de secuencia | [secuencia-solicitar-recojo.puml](docs/design/secuencia-solicitar-recojo.puml) | [E2_secuencia-solicitar-recojo.png](docs/design/img/E2_secuencia-solicitar-recojo.png) |
+| E3 | Máquina de estados | [estados-solicitud.mmd](docs/design/estados-solicitud.mmd) | [E3_estados-solicitud.png](docs/design/img/E3_estados-solicitud.png) |
+| E4 | Diagrama de actividades | [actividades-ruta-diaria.puml](docs/design/actividades-ruta-diaria.puml) | [E4_actividades-ruta-diaria.png](docs/design/img/E4_actividades-ruta-diaria.png) |
+| E5 | Diagrama de paquetes | [paquetes.puml](docs/design/paquetes.puml) | [E5_paquetes.png](docs/design/img/E5_paquetes.png) |
+| E6 | Round-trip (código, ingeniería inversa, diferencias) | [src/solicitudes/](src/solicitudes/), [round-trip.md](docs/design/round-trip.md) | [classes_solicitudes.png](docs/design/img/classes_solicitudes.png) |
+| E7 | Consistencia C1-C5 y bitácora de IA | [consistencia.md](docs/design/consistencia.md), [bitacora-ia.md](docs/design/bitacora-ia.md) | - |
+
+### Reglas de consistencia verificadas
+
+C1 (mensajes y operaciones), C2 (transiciones y operaciones), C3 (multiplicidades), C4 (paquetes sin ciclos, coherentes con el ADR-001) y C5 (nombres del dominio). Los hallazgos y falsos positivos de la revisión con IA están en [consistencia.md](docs/design/consistencia.md).
+
+Etiqueta de entrega: `v0.5-diseno`.
